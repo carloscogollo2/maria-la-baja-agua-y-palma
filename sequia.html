@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de sequía · María la Baja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --bg:#F6F1E7;--panel:#FFFFFF;--fg:#1D1D1B;--fg2:#6B675E;--linea:#D9D1C1;
+  --verde:#1F4D3A;--verde2:#DCE8DF;--azul:#245F7E;--azul2:#CFE3EC;--ocre:#C8812A;--ocre2:#F3E2C7;--rojo:#A63D2F;--rojo2:#F1D9D3;
+  --humano:#245F7E;--alim:#C8812A;--pastos:#8C9A5B;--palma:#1F4D3A;--vacio:#ECE6DA;
+  --f-tit:"Source Serif 4",Georgia,serif;--f-ui:"Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15130F;--panel:#211E18;--fg:#EDE7DA;--fg2:#A39C8C;--linea:#3A352B;
+  --verde:#7FB896;--verde2:#22352B;--azul:#79B3D3;--azul2:#1D2C35;--ocre:#E7B06A;--ocre2:#3A2E1C;--rojo:#E08473;--rojo2:#3A231F;
+  --humano:#79B3D3;--alim:#E7B06A;--pastos:#B5C27F;--palma:#7FB896;--vacio:#2E2A22;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15130F;--panel:#211E18;--fg:#EDE7DA;--fg2:#A39C8C;--linea:#3A352B;
+  --verde:#7FB896;--verde2:#22352B;--azul:#79B3D3;--azul2:#1D2C35;--ocre:#E7B06A;--ocre2:#3A2E1C;--rojo:#E08473;--rojo2:#3A231F;
+  --humano:#79B3D3;--alim:#E7B06A;--pastos:#B5C27F;--palma:#7FB896;--vacio:#2E2A22;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);-webkit-font-smoothing:antialiased;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 16px 64px}
+.k{font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--ocre)}
+h1{font-family:var(--f-tit);font-weight:600;font-size:clamp(28px,4.5vw,42px);line-height:1.12;margin:8px 0 10px;color:var(--verde)}
+.lead{font-size:18px;color:var(--fg2);max-width:760px;margin:0}
+.panel{background:var(--panel);border:1px solid var(--linea);border-radius:16px;padding:22px 22px 24px;margin-top:22px}
+.ctrl{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media (max-width:760px){.ctrl{grid-template-columns:1fr}}
+label{display:block;font-weight:800;font-size:15px}
+.val{font-family:var(--f-tit);font-size:34px;font-weight:600;color:var(--azul);line-height:1.1;margin:6px 0 4px}
+.hint{font-size:13.5px;color:var(--fg2)}
+input[type=range]{width:100%;accent-color:var(--azul);height:28px;margin-top:6px}
+.nivel{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.nv{flex:1 1 140px;border-radius:12px;padding:10px 12px;border:2px solid transparent;background:var(--vacio);opacity:.55;transition:all .2s}
+.nv b{display:block;font-size:15px}
+.nv span{font-size:13px;color:var(--fg2)}
+.nv.on{opacity:1;border-color:currentColor}
+.nv.n1{color:#3E7D5A}.nv.n2{color:#B98A12}.nv.n3{color:#C8812A}.nv.n4{color:#A63D2F}
+.nv.on b{color:inherit}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+h2{font-family:var(--f-tit);font-weight:600;font-size:22px;margin:0 0 4px;color:var(--fg)}
+.sub2{font-size:14px;color:var(--fg2);margin:0 0 14px}
+.row{margin:12px 0}
+.row .lab{display:flex;justify-content:space-between;font-size:14.5px;font-weight:700}
+.row .lab em{font-style:normal;font-weight:800}
+.bar{height:16px;border-radius:99px;background:var(--vacio);overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .35s ease}
+.tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:99px}
+.t-hoy{background:var(--rojo2);color:var(--rojo)}
+.t-pro{background:var(--verde2);color:var(--verde)}
+.costo{margin-top:22px;border-radius:14px;padding:18px 20px;background:var(--azul2)}
+.costo .num{font-family:var(--f-tit);font-size:30px;font-weight:600;color:var(--azul)}
+.costo p{margin:4px 0 0;font-size:15.5px}
+.nota{font-size:13px;color:var(--fg2);margin-top:26px;border-top:1px solid var(--linea);padding-top:14px}
+.nota p{margin:6px 0}
+a{color:var(--azul)}
+.volver{display:inline-block;margin-top:8px;font-weight:700;font-size:14px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="k">María la Baja · Sala 10 · Cuando no llueve</div>
+  <h1>¿Quién recibe agua cuando no alcanza para todos?</h1>
+  <p class="lead">Mueva la barra para bajar el agua disponible en una temporada seca y compare el reparto de hoy con el protocolo de sequía que propone la misión. Es un modelo ilustrativo, no un cálculo hidráulico.</p>
+
+  <section class="panel">
+    <div class="ctrl">
+      <div>
+        <label for="agua">Agua disponible frente a una temporada normal</label>
+        <div class="val" id="aguaVal">100 %</div>
+        <input type="range" id="agua" min="20" max="100" step="1" value="100" aria-describedby="aguaHint">
+        <div class="hint" id="aguaHint">100 % es un año normal. En la sequía de 2019 la comunidad cerró las compuertas de Arroyo Grande.</div>
+      </div>
+      <div>
+        <label for="pob">Personas de las veredas que el distrito abastecería</label>
+        <div class="val" id="pobVal">30.000</div>
+        <input type="range" id="pob" min="10000" max="50000" step="1000" value="30000" aria-describedby="pobHint">
+        <div class="hint" id="pobHint">Rango usado en la Sala 10: entre 10.000 y 50.000 personas.</div>
+      </div>
+    </div>
+    <div class="nivel" role="status" aria-live="polite">
+      <div class="nv n1" id="nv1"><b>Normal</b><span>Suministro pleno con datos públicos</span></div>
+      <div class="nv n2" id="nv2"><b>Alerta</b><span>Se publican datos y se limitan nuevos usos</span></div>
+      <div class="nv n3" id="nv3"><b>Escasez</b><span>Primero el consumo humano; se protegen los alimentos</span></div>
+      <div class="nv n4" id="nv4"><b>Emergencia</b><span>Consumo humano y riego mínimo de cultivos permanentes</span></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel">
+      <span class="tag t-hoy">Hoy</span>
+      <h2>Sin protocolo</h2>
+      <p class="sub2">Las veredas no son usuarias del distrito y dependen de carrotanques. Los usuarios bajan en proporción.</p>
+      <div id="hoy"></div>
+    </div>
+    <div class="panel">
+      <span class="tag t-pro">Con la misión</span>
+      <h2>Protocolo de sequía</h2>
+      <p class="sub2" id="regla">Hay agua para todos los usos.</p>
+      <div id="pro"></div>
+    </div>
+  </section>
+
+  <section class="costo panel" style="border:none">
+    <div class="num" id="costoNum">0 ha</div>
+    <p id="costoTxt"></p>
+  </section>
+
+  <div class="nota">
+    <p><b>Cómo se calcula.</b> El reparto normal sigue el uso del agua del distrito en 2019: palma 55 %, arroz 38 %, pastos 5 % y frutales 2 % (Calle, 2024, con datos de Usomarialabaja). Arroz y frutales se agrupan como alimentos. El consumo humano de las veredas sale del cálculo de la Sala 10: abastecer a entre 10.000 y 50.000 personas en un trimestre seco equivale al riego de 18 a 91 hectáreas de palma (cálculo propio con base en Semana Rural, 2018, y Calle, 2024). Las 6.208 hectáreas de palma del distrito en 2019 sirven para traducir el agua en hectáreas.</p>
+    <p><b>Supuestos del grupo.</b> En escasez, los alimentos bajan la mitad de lo que baja la palma. En emergencia, la palma conserva un riego mínimo de sostenimiento del 30 % de su demanda. Los umbrales de cada nivel (90 %, 70 % y 50 %) son ilustrativos: el protocolo propone calibrarlos cuando haya aforos públicos del distrito.</p>
+    <a class="volver" href="https://storymaps.arcgis.com/stories/ca0f796a06384fe7a473141f68603a13">← Volver a la historia</a>
+  </div>
+</main>
+<script>
+(function(){
+  var DEM={alim:40,pastos:5,palma:55};       // demanda de riego en una temporada normal (2019 = 100)
+  var HA_PALMA=6208, U_HA=HA_PALMA/DEM.palma; // hectáreas de palma por unidad de agua
+  var USOS=[["humano","Consumo humano de las veredas","--humano"],["alim","Alimentos (arroz y frutales)","--alim"],["pastos","Pastos","--pastos"],["palma","Palma de aceite","--palma"]];
+  var $=function(id){return document.getElementById(id)};
+  function fmt(n){return Math.round(n).toLocaleString("es-CO")}
+  function humano(pob){var ha=18+(pob-10000)/40000*(91-18);return ha/U_HA}
+  function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+  function nivel(a){return a>=90?1:a>=70?2:a>=50?3:4}
+  function hoy(a){var f=a/100;return {humano:0,alim:f,pastos:f,palma:f}}
+  function protocolo(a,H){
+    var total=DEM.alim+DEM.pastos+DEM.palma, W=a/100*total, n=nivel(a);
+    var h=Math.min(H,W), R=W-h, o={humano:H?h/H:1};
+    var resto=DEM.alim+DEM.pastos;
+    if(n<=2){var f=clamp(R/total,0,1);o.alim=o.pastos=o.palma=f;}
+    else if(n===3){var x=clamp((R-resto/2)/(resto/2+DEM.palma),0,1);var y=clamp((1+x)/2,0,1);
+      if(resto*y+DEM.palma*x>R){y=clamp(R/resto,0,1);x=0}o.alim=o.pastos=y;o.palma=x;}
+    else{var min=0.3*DEM.palma, pm=Math.min(min,R);R-=pm;var y2=clamp(R/resto,0,1);R-=resto*y2;
+      o.alim=o.pastos=y2;o.palma=(pm+Math.max(0,R))/DEM.palma;}
+    return o;
+  }
+  function pinta(el,o){
+    el.innerHTML=USOS.map(function(u){var p=clamp(o[u[0]],0,1)*100;
+      return '<div class="row"><div class="lab"><span>'+u[1]+'</span><em>'+fmt(p)+' %</em></div><div class="bar" role="img" aria-label="'+u[1]+': '+fmt(p)+' % de lo que necesita"><i style="width:'+p+'%;background:var('+u[2]+')"></i></div></div>';}).join("");
+  }
+  var REGLAS={1:"Hay agua para todos los usos. Los datos de caudales y turnos se publican.",
+    2:"Todos bajan en proporción, pero el consumo humano ya está reservado.",
+    3:"Primero el consumo humano. Los alimentos bajan la mitad de lo que baja la palma.",
+    4:"Solo consumo humano, alimentos y un riego mínimo para que la palma no muera."};
+  function update(){
+    var a=+$("agua").value, pob=+$("pob").value, H=humano(pob), n=nivel(a);
+    $("aguaVal").textContent=a+" %"; $("pobVal").textContent=fmt(pob);
+    for(var i=1;i<=4;i++)$("nv"+i).classList.toggle("on",i===n);
+    var oh=hoy(a), op=protocolo(a,H);
+    pinta($("hoy"),oh); pinta($("pro"),op); $("regla").textContent=REGLAS[n];
+    var dif=(oh.palma-op.palma)*DEM.palma*U_HA;
+    $("costoNum").textContent=fmt(Math.max(0,dif))+" ha";
+    var pct=(Math.max(0,dif)/HA_PALMA*100).toLocaleString("es-CO",{maximumFractionDigits:1});
+    $("costoTxt").textContent=dif<=0.5?"Con este nivel de agua, el protocolo no le quita riego a la palma frente al reparto de hoy y las veredas reciben "+fmt(op.humano*100)+" % del agua que necesitan.":
+      "Es lo que la palma deja de regar con el protocolo frente al reparto de hoy, el "+pct+" % de las 6.208 ha que había en el distrito en 2019. A cambio, "+fmt(pob)+" personas reciben "+fmt(op.humano*100)+" % del agua que necesitan"+(n>=3?" y los alimentos quedan más protegidos.":".");
+  }
+  $("agua").addEventListener("input",update); $("pob").addEventListener("input",update); update();
+})();
+</script>
+</body>
+</html>
